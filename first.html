@@ -1,0 +1,175 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Money Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #transactions {
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Money Tracker</h1>
+    <form id="moneyForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name">
+
+        <label for="amount">Amount:</label>
+        <input type="text" id="amount" name="amount">
+
+        <label for="returned">Returned:</label>
+        <input type="text" id="returned" name="returned">
+
+        <label for="description">Description:</label>
+        <input type="text" id="description" name="description">
+        <textarea id="description"></textarea>
+
+        <button type="button" onclick="addTransaction()">Add Transaction</button>
+    </form>
+
+    <div id="transactions">
+        <h2>Transactions</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Amount</th>
+                    <th>Returned</th>
+                    <th>Left</th>
+                    <th>DateandTime</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody id="transactionTable">
+                </tbody>
+        </table>
+    </div>
+    <button onclick="saveToFile()">Save File</button>
+    <button onclick="loadFromFile()">Load File</button>
+        <script>
+        function addTransaction() {
+            var name = document.getElementById('name').value;
+            var amount = parseFloat(document.getElementById('amount').value);
+            var returned = parseFloat(document.getElementById('returned').value);
+            var description = document.getElementById('description').value;
+            var left = amount - returned;
+            var currentDate = new Date();
+            var dateTime = currentDate.toLocaleString();
+            var row = `<tr>
+                            <td>${name}</td>
+                            <td>${amount}</td>
+                            <td>${returned}</td>
+                            <td>${left}</td>
+                            <td>${dateTime}</td>
+                            <td>${description}</td>
+                        </tr>`;
+            document.getElementById('transactionTable').innerHTML += row;
+            document.getElementById('name').value = '';
+            document.getElementById('amount').value = '';
+            document.getElementById('returned').value = '';
+            document.getElementById('description').value = '';
+        }
+function saveToFile() {
+            var tableContent = document.getElementById('transactionTable').innerHTML;
+            var blob = new Blob([tableContent], { type: "text/plain;charset=utf-8" });
+            saveAs(blob, "money_transactions.txt");
+        }
+        function loadFromFile(file) {
+            var reader = new FileReader();
+            reader.onload = function(event) {
+                document.getElementById('transactionTable').innerHTML = event.target.result;
+            };
+            reader.readAsText(file);
+        }
+        function saveToFile() {
+            var table = document.getElementById('transactionTable');
+            var csv = [];
+            for (var i = 0; i < table.rows.length; i++) {
+                var row = [];
+                for (var j = 0; j < table.rows[i].cells.length; j++) {
+                    row.push(table.rows[i].cells[j].innerHTML);
+                }
+                csv.push(row.join(","));
+            }
+            var csvContent = "data:text/csv;charset=utf-8," + csv.join("\n");
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "transactions.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+
+        function loadFromFile() {
+            var input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.csv';
+
+            input.onchange = function () {
+                var file = this.files[0];
+                var reader = new FileReader();
+
+                reader.onload = function () {
+                    var data = reader.result.split('\n');
+                    var table = document.getElementById('transactionTable');
+                    for (var i = 0; i < data.length; i++) {
+                        var row = data[i].split(',');
+                        var newRow = table.insertRow(table.rows.length);
+                        for (var j = 0; j < row.length; j++) {
+                            var cell = newRow.insertCell(j);
+                            cell.innerHTML = row[j];
+                        }
+                    }
+                };
+                reader.readAsText(file);
+            };
+
+            input.click();
+        }
+    </script>
+</body>
+</html>
